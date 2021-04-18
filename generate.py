@@ -113,7 +113,31 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
+        if (x, y) in self.crossword.overlaps and self.crossword.overlaps.get((x, y)) is not None:
+            overlap_position = self.crossword.overlaps.get((x, y))
+            y_possibe_overlap_letter = set()
+            if y.direction == "down":
+                y_overlap_letter_position = overlap_position[0] - y.i
+            else:
+                y_overlap_letter_position = overlap_position[1] - y.j
+            for word in self.domains.get(y):
+                y_possibe_overlap_letter.add(word[y_overlap_letter_position])
+            if x.direction == "down":
+                x_overlap_letter_position = overlap_position[0] - x.i
+            else:
+                x_overlap_letter_position = overlap_position[1] - x.j
+
+            filtered_words = [word for word in self.domains.get(x) if
+                              word[x_overlap_letter_position] in y_possibe_overlap_letter]
+
+            if len(filtered_words) < len(self.domains.get(x)):
+                self.domains[x] = filtered_words
+                return True
+            else:
+                return False
+
+        else:
+            return False
 
     def ac3(self, arcs=None):
         """
@@ -124,14 +148,31 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        if arcs is None:
+            i = 0
+            arcs = list()
+            list_variables = list(self.domains.keys())
+            while i < len(list_variables) - 1:
+                arcs.append((list_variables[i], list_variables[i + 1]))
+                i += 1
+
+        for arc in arcs:
+            self.revise(arc[0], arc[1])
+
+        for variable in self.domains:
+            if len(self.domains.get(variable)) < 1:
+                return False
+        return True
 
     def assignment_complete(self, assignment):
         """
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        raise NotImplementedError
+        for variable in self.domains:
+            if len(self.domains.get(variable)) != 1:
+                return False
+        return True
 
     def consistent(self, assignment):
         """
@@ -168,11 +209,21 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+        if self.assignment_complete(assignment):
+            return assignment
+        var = self.select_unassigned_variable(assignment)
+        for value in self.order_domain_values(var, assignment):
+            if self.revise(value, assignment):
+                assignment[var] = value
+                result = self.backtrack(assignment)
+                if self.consistent(result):
+                    return result
+                else:
+                    assignment.pop(var)
+        return None
 
 
 def main():
-
     # Check usage
     if len(sys.argv) not in [3, 4]:
         sys.exit("Usage: python generate.py structure words [output]")
