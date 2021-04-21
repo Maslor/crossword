@@ -169,10 +169,13 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        for variable in self.domains:
-            if len(self.domains.get(variable)) != 1:
-                return False
-        return True
+        if len(assignment) == 0:
+            return False
+        else:
+            for variable in assignment:
+                if len(assignment.get(variable)) != 1:
+                    return False
+            return True
 
     def consistent(self, assignment):
         """
@@ -188,7 +191,15 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        raise NotImplementedError
+
+        value_list = [value for value in self.domains.get(var)]
+        list_of_overlaping_neighbors = [x for x in self.crossword.overlaps if var in x]
+
+        if len(assignment) > 0:
+            value_list.pop(assignment.keys())
+
+        #TODO apply correct heuristics
+        return value_list
 
     def select_unassigned_variable(self, assignment):
         """
@@ -198,7 +209,16 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        minLength = 10000
+        min_var = None
+
+        for variable in self.domains:
+            varLength = len(self.domains.get(variable))
+            if varLength < minLength:
+                minLength = varLength
+                min_var = variable
+
+        return min_var
 
     def backtrack(self, assignment):
         """
@@ -213,10 +233,10 @@ class CrosswordCreator():
             return assignment
         var = self.select_unassigned_variable(assignment)
         for value in self.order_domain_values(var, assignment):
-            if self.revise(value, assignment):
-                assignment[var] = value
+            assignment[var] = value
+            if self.consistent(assignment):
                 result = self.backtrack(assignment)
-                if self.consistent(result):
+                if self.assignment_complete(result):
                     return result
                 else:
                     assignment.pop(var)
