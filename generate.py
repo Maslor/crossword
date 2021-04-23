@@ -114,21 +114,11 @@ class CrosswordCreator():
         False if no revision was made.
         """
         if (x, y) in self.crossword.overlaps and self.crossword.overlaps.get((x, y)) is not None:
-            overlap_position = self.crossword.overlaps.get((x, y))
-            y_possibe_overlap_letter = set()
-            if y.direction == "down":
-                y_overlap_letter_position = overlap_position[0] - y.i
-            else:
-                y_overlap_letter_position = overlap_position[1] - y.j
-            for word in self.domains.get(y):
-                y_possibe_overlap_letter.add(word[y_overlap_letter_position])
-            if x.direction == "down":
-                x_overlap_letter_position = overlap_position[0] - x.i
-            else:
-                x_overlap_letter_position = overlap_position[1] - x.j
+            x_index, y_index = self.get_overlap_indexes(x, y)
 
-            filtered_words = [word for word in self.domains.get(x) if
-                              word[x_overlap_letter_position] in y_possibe_overlap_letter]
+            possible_y_letters = [word[y_index] for word in self.domains.get(y)]
+
+            filtered_words = [word for word in self.domains.get(x) if word[x_index] in possible_y_letters]
 
             if len(filtered_words) < len(self.domains.get(x)):
                 self.domains[x] = filtered_words
@@ -138,6 +128,26 @@ class CrosswordCreator():
 
         else:
             return False
+
+    def get_overlap_letters(self, domain, x, y):
+        if y.direction == 'DOWN':
+            x_letter = domain.get(x)[y.j - x.j]
+            y_letter = self.domains.get(y)[x.i - y.i]
+        else:
+            x_letter = domain.get(x)[y.i - x.i]
+            y_letter = self.domains.get(y)[x.j - y.j]
+
+        return x_letter, y_letter
+
+    def get_overlap_indexes(self, x, y):
+        if y.direction == 'DOWN':
+            x_index = y.j - x.j
+            y_index = x.i - y.i
+        else:
+            x_index = y.i - x.i
+            y_index = x.j - y.j
+
+        return x_index, y_index
 
     def ac3(self, arcs=None):
         """
@@ -182,7 +192,24 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
+        for variable in assignment:
+            var_length = variable.length
+            assigned_word_length = len(assignment.get(variable))
+            if var_length != assigned_word_length:
+                return False
+            else:
+                overlapping_variables = []
+                for overlap_tuple in self.crossword.overlaps:
+                    if variable in overlap_tuple:
+                        if overlap_tuple[0] == variable:
+                            overlapping_variables.append(overlap_tuple[1])
+                        else:
+                            overlapping_variables.append(overlap_tuple[0])
+                for overlapping_variable in overlapping_variables:
+                    x_overlap_letter, y_overlap_letter = self.get_overlap_letters(assignment, variable, overlapping_variable)
+                    if x_overlap_letter != y_overlap_letter:
+                        return False
+                return True
 
     def order_domain_values(self, var, assignment):
         """
@@ -198,7 +225,7 @@ class CrosswordCreator():
         if len(assignment) > 0:
             value_list.pop(assignment.keys())
 
-        #TODO apply correct heuristics
+        # TODO apply correct heuristics
         return value_list
 
     def select_unassigned_variable(self, assignment):
