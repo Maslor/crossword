@@ -130,7 +130,7 @@ class CrosswordCreator():
             return False
 
     def get_overlap_letters(self, domain, x, y):
-        if y.direction == 'DOWN':
+        if y.direction == 'down':
             x_letter = domain.get(x)[y.j - x.j]
             y_letter = domain.get(y)[x.i - y.i]
         else:
