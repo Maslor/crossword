@@ -140,7 +140,7 @@ class CrosswordCreator():
         return x_letter, y_letter
 
     def get_overlap_indexes(self, x, y):
-        if y.direction == 'DOWN':
+        if y.direction == 'down':
             x_index = y.j - x.j
             y_index = x.i - y.i
         else:
