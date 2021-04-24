@@ -179,13 +179,10 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        if assignment is None or len(assignment) == 0:
-            return False
-        else:
-            for variable in assignment:
-                if len(assignment.get(variable)) != 1:
-                    return False
+        if assignment is not None and len(assignment) == len(self.domains):
             return True
+        else:
+            return False
 
     def consistent(self, assignment):
         """
