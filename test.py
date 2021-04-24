@@ -38,6 +38,11 @@ class TestGenerate(unittest.TestCase):
         self.assertTrue(old_domain_y == new_domain_y)
         self.assertTrue(len(old_domain_x) > len(new_domain_x))
 
+    def test_assignment_is_complete(self):
+        creator = CrosswordCreator(self.crossword)
+        creator.enforce_node_consistency()
+
+
 
 if __name__ == '__main__':
     unittest.main()

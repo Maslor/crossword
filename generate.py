@@ -132,10 +132,10 @@ class CrosswordCreator():
     def get_overlap_letters(self, domain, x, y):
         if y.direction == 'DOWN':
             x_letter = domain.get(x)[y.j - x.j]
-            y_letter = self.domains.get(y)[x.i - y.i]
+            y_letter = domain.get(y)[x.i - y.i]
         else:
             x_letter = domain.get(x)[y.i - x.i]
-            y_letter = self.domains.get(y)[x.j - y.j]
+            y_letter = domain.get(y)[x.j - y.j]
 
         return x_letter, y_letter
 
@@ -179,7 +179,7 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        if len(assignment) == 0:
+        if assignment is None or len(assignment) == 0:
             return False
         else:
             for variable in assignment:
@@ -200,15 +200,17 @@ class CrosswordCreator():
             else:
                 overlapping_variables = []
                 for overlap_tuple in self.crossword.overlaps:
-                    if variable in overlap_tuple:
+                    if variable in overlap_tuple and self.crossword.overlaps.get(overlap_tuple) is not None:
                         if overlap_tuple[0] == variable:
                             overlapping_variables.append(overlap_tuple[1])
-                        else:
+                        elif overlap_tuple[1] == variable:
                             overlapping_variables.append(overlap_tuple[0])
                 for overlapping_variable in overlapping_variables:
-                    x_overlap_letter, y_overlap_letter = self.get_overlap_letters(assignment, variable, overlapping_variable)
-                    if x_overlap_letter != y_overlap_letter:
-                        return False
+                    if overlapping_variable in assignment:
+                        x_overlap_letter, y_overlap_letter = self.get_overlap_letters(assignment, variable,
+                                                                                      overlapping_variable)
+                        if x_overlap_letter != y_overlap_letter:
+                            return False
                 return True
 
     def order_domain_values(self, var, assignment):
@@ -220,11 +222,11 @@ class CrosswordCreator():
         """
 
         value_list = [value for value in self.domains.get(var)]
-        list_of_overlaping_neighbors = [x for x in self.crossword.overlaps if var in x]
 
-        if len(assignment) > 0:
-            value_list.pop(assignment.keys())
-
+        for variable in assignment:
+            word = assignment.get(variable)
+            if word in value_list:
+                value_list.remove(word)
         # TODO apply correct heuristics
         return value_list
 
@@ -240,10 +242,11 @@ class CrosswordCreator():
         min_var = None
 
         for variable in self.domains:
-            varLength = len(self.domains.get(variable))
-            if varLength < minLength:
-                minLength = varLength
-                min_var = variable
+            if variable not in assignment:
+                varLength = len(self.domains.get(variable))
+                if varLength < minLength:
+                    minLength = varLength
+                    min_var = variable
 
         return min_var
 
@@ -265,9 +268,10 @@ class CrosswordCreator():
                 result = self.backtrack(assignment)
                 if self.assignment_complete(result):
                     return result
-                else:
-                    assignment.pop(var)
-        return None
+            else:
+                assignment.pop(var)
+        if len(assignment) == 0:
+            return None
 
 
 def main():
