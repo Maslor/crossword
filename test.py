@@ -9,22 +9,6 @@ class TestGenerate(unittest.TestCase):
         words = "data/words0.txt"
         self.crossword = Crossword(structure, words)
 
-    def test_get_overlap_indexes_x_across(self):
-        creator = CrosswordCreator(self.crossword)
-        var_x = Variable(4, 1, "across", 4)
-        var_y = Variable(0, 1, "down", 5)
-        overlap_indexes = creator.get_overlap_indexes(var_x, var_y)
-        print(overlap_indexes)
-        self.assertTrue((0, 4) == overlap_indexes)
-
-    def test_get_overlap_indexes_x_down(self):
-        creator = CrosswordCreator(self.crossword)
-        var_x = Variable(0, 1, "down", 5)
-        var_y = Variable(4, 1, "across", 4)
-        overlap_indexes = creator.get_overlap_indexes(var_x, var_y)
-        print(overlap_indexes)
-        self.assertTrue((4, 0) == overlap_indexes)
-
     def test_revise(self):
         creator = CrosswordCreator(self.crossword)
         creator.enforce_node_consistency()

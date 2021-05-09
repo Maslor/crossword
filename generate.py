@@ -114,7 +114,7 @@ class CrosswordCreator():
         False if no revision was made.
         """
         if (x, y) in self.crossword.overlaps and self.crossword.overlaps.get((x, y)) is not None:
-            x_index, y_index = self.get_overlap_indexes(x, y)
+            x_index, y_index = self.crossword.overlaps.get((x, y))
 
             possible_y_letters = [word[y_index] for word in self.domains.get(y)]
 
@@ -128,26 +128,6 @@ class CrosswordCreator():
 
         else:
             return False
-
-    def get_overlap_letters(self, domain, x, y):
-        if y.direction == 'down':
-            x_letter = domain.get(x)[y.j - x.j]
-            y_letter = domain.get(y)[x.i - y.i]
-        else:
-            x_letter = domain.get(x)[y.i - x.i]
-            y_letter = domain.get(y)[x.j - y.j]
-
-        return x_letter, y_letter
-
-    def get_overlap_indexes(self, x, y):
-        if y.direction == 'down':
-            x_index = y.j - x.j
-            y_index = x.i - y.i
-        else:
-            x_index = y.i - x.i
-            y_index = x.j - y.j
-
-        return x_index, y_index
 
     def ac3(self, arcs=None):
         """
@@ -195,20 +175,13 @@ class CrosswordCreator():
             if var_length != assigned_word_length:
                 return False
             else:
-                overlapping_variables = []
-                for overlap_tuple in self.crossword.overlaps:
-                    if variable in overlap_tuple and self.crossword.overlaps.get(overlap_tuple) is not None:
-                        if overlap_tuple[0] == variable:
-                            overlapping_variables.append(overlap_tuple[1])
-                        elif overlap_tuple[1] == variable:
-                            overlapping_variables.append(overlap_tuple[0])
-                for overlapping_variable in overlapping_variables:
-                    if overlapping_variable in assignment:
-                        x_overlap_letter, y_overlap_letter = self.get_overlap_letters(assignment, variable,
-                                                                                      overlapping_variable)
-                        if x_overlap_letter != y_overlap_letter:
+                for neighbor in self.crossword.neighbors(variable):
+                    if neighbor in assignment:
+                        overlap = self.crossword.overlaps.get((variable, neighbor))
+                        if assignment.get(variable)[overlap[0]] != assignment.get(neighbor)[overlap[1]]:
                             return False
-                return True
+        return True
+
 
     def order_domain_values(self, var, assignment):
         """
