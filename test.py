@@ -25,6 +25,28 @@ class TestGenerate(unittest.TestCase):
         print(overlap_indexes)
         self.assertTrue((4, 0) == overlap_indexes)
 
+    def test_get_overlap_letters_x_down(self):
+        creator = CrosswordCreator(self.crossword)
+        var_x = Variable(0, 1, "down", 5)
+        var_y = Variable(4, 1, "across", 4)
+        assignment = dict()
+        assignment[var_x] = "SEVEN"
+        assignment[var_y] = "FIVE"
+        overlap_letters = creator.get_overlap_letters(assignment, var_x, var_y)
+        print(overlap_letters)
+        self.assertTrue(("N", "F") == overlap_letters)
+
+    def test_get_overlap_letters_y_down(self):
+        creator = CrosswordCreator(self.crossword)
+        var_x = Variable(4, 1, "across", 4)
+        var_y = Variable(0, 1, "down", 5)
+        assignment = dict()
+        assignment[var_x] = "FIVE"
+        assignment[var_y] = "NIGHT"
+        overlap_letters = creator.get_overlap_letters(assignment, var_x, var_y)
+        print(overlap_letters)
+        self.assertTrue(("F", "T") == overlap_letters)
+
     def test_revise(self):
         creator = CrosswordCreator(self.crossword)
         creator.enforce_node_consistency()
